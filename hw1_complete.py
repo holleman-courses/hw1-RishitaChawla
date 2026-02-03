@@ -16,11 +16,15 @@ print(f"TensorFlow Version: {tf.__version__}")
 print(f"Keras Version: {keras.__version__}")
 
 
-## 
-
 def build_model1():
-  model = None # Add code to define model 1.
-  
+  input_shape = (32,32,3)
+  model = tf.keras.Sequential([
+    tf.keras.layers.Flatten(input_shape=input_shape), # convert input matrix to vector
+    tf.keras.layers.Dense(128, activation='leaky_relu'),  # Dense == fully connected
+    tf.keras.layers.Dense(128, activation='leaky_relu'),
+    tf.keras.layers.Dense(128, activation='leaky_relu'),  
+    tf.keras.layers.Dense(10), # 10 units correspond to 10 output classes 0-9
+    ])
   return model
 
 def build_model2():
@@ -44,13 +48,20 @@ if __name__ == '__main__':
   ## Add code here to Load the CIFAR10 data set
   ########################################
   ## Build and train model 1
-  
   model1 = build_model1()
-  # compile and train model 1.
+  # compile and train model 1
+  model1.compile(optimizer='adam',
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+  model1.summary()
+  
+
+  
+
 
 
   ## Build, compile, and train model 2 (DS Convolutions)
-  model2 = build_model2()
+  #model2 = build_model2()
 
   
   ### Repeat for model 3 and your best sub-50k params model
