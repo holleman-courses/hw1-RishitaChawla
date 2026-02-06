@@ -20,6 +20,7 @@ print(f"Keras Version: {keras.__version__}")
 
 def build_model1():
   model = None # Add code to define model 1.
+  
   return model
 
 def build_model2():
@@ -41,11 +42,12 @@ if __name__ == '__main__':
 
   ########################################
   ## Add code here to Load the CIFAR10 data set
-
   ########################################
   ## Build and train model 1
+  
   model1 = build_model1()
   # compile and train model 1.
+
 
   ## Build, compile, and train model 2 (DS Convolutions)
   model2 = build_model2()
