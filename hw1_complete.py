@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import image
 from sklearn.model_selection import train_test_split
+import os
 
 
 print(f"TensorFlow Version: {tf.__version__}")
@@ -62,9 +63,34 @@ def build_model2():
   return model
 
 def build_model3():
-  model = None # Add code to define model 1.
-  ## This one should use the functional API so you can create the residual connections
-  return model
+    
+    inputs = tf.keras.Input(shape=(32, 32, 3))
+
+    # LAYER 1: Standard Conv2D 
+    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), padding="same", activation="relu")(inputs)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # LAYER 2: SeparableConv2D 
+    x = tf.keras.layers.SeparableConv2D(64, (3, 3), strides=(2, 2), padding="same", activation="relu")(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    shortcut = x 
+
+    # Two Separable Layers (Stride 1)
+    x = tf.keras.layers.SeparableConv2D(64, (3, 3), padding="same", activation="relu")(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.SeparableConv2D(64, (3, 3), padding="same", activation="relu")(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Add()([x, shortcut]) 
+    x = tf.keras.layers.SeparableConv2D(128, (3, 3), padding="same", activation="relu")(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.SeparableConv2D(128, (3, 3), padding="same", activation="relu")(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Flatten()(x)
+    outputs = tf.keras.layers.Dense(10)(x)
+
+    model = tf.keras.Model(inputs=inputs, outputs=outputs, name="model3_residual")
+    return model
 
 def build_model50k():
   model = None # Add code to define model 1.
@@ -83,7 +109,7 @@ if __name__ == '__main__':
     train_labels,
     test_size=0.2,      # 20% for validation
     random_state=42
-)
+  )
   train_images = train_images / 255.0
   val_images   = val_images / 255.0
   test_images  = test_images / 255.0
@@ -102,50 +128,72 @@ if __name__ == '__main__':
               epochs=30,
               validation_data=(val_images, val_labels)
             )
-train_acc = history.history['accuracy'][-1]       # last epoch training accuracy
-val_acc   = history.history['val_accuracy'][-1]   # last epoch validation accuracy
+  train_acc = history.history['accuracy'][-1]       # last epoch training accuracy
+  val_acc   = history.history['val_accuracy'][-1]   # last epoch validation accuracy
 
-test_loss, test_acc = model1.evaluate(test_images, test_labels)
+  test_loss, test_acc = model1.evaluate(test_images, test_labels)
 
-test_loss, test_accuracy = model1.evaluate(
-    test_images,
-    test_labels
-)
+  test_loss, test_accuracy = model1.evaluate(
+      test_images,
+      test_labels
+  )
 
-print("Test accuracy:", test_accuracy)
+  print("Test accuracy:", test_accuracy)
 
-#------------------------------------------MODEL 1 END--------------------------------------------
-"""
-#-----------------------------------------MODEL 2 ----------------------------------------------
-# Build, compile, and train model 2 (DS Convolutions)
-model2 = build_model2()
-# Compiling the model
-model2.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy']) 
-model2.summary()
+  #------------------------------------------MODEL 1 END--------------------------------------------
+  """
+  
+  #-----------------------------------------MODEL 2 ----------------------------------------------
+  # Build, compile, and train model 2 (DS Convolutions)
+  model3 = build_model3()
+  # Compiling the model
+  model3.compile(optimizer='adam',
+                loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                metrics=['accuracy']) 
+  model3.summary()
 
-history = model2.fit(
-              train_images,
-              train_labels,
-              epochs=30,
-              validation_data=(val_images, val_labels)
-            )
-train_acc = history.history['accuracy'][-1]       # last epoch training accuracy
-val_acc   = history.history['val_accuracy'][-1]   # last epoch validation accuracy
+  checkpoint_cb = tf.keras.callbacks.ModelCheckpoint(
+      "model3_best.h5", 
+      save_best_only=True, 
+      monitor="val_accuracy"
+  )
 
-test_loss, test_acc = model2.evaluate(test_images, test_labels)
+  history = model3.fit(
+      train_images,
+      train_labels,
+      epochs=30,
+      validation_data=(val_images, val_labels),
+      callbacks=[checkpoint_cb] 
+  )
+  train_acc = history.history['accuracy'][-1]       # last epoch training accuracy
+  val_acc   = history.history['val_accuracy'][-1]   # last epoch validation accuracy
 
-test_loss, test_accuracy = model2.evaluate(
-    test_images,
-    test_labels
-)
+  test_loss, test_acc = model3.evaluate(test_images, test_labels)
 
-print("Test accuracy:", test_accuracy)
+  test_loss, test_accuracy = model3.evaluate(
+      test_images,
+      test_labels
+    )
 
+  print("Test accuracy:", test_accuracy)
+ 
+  
+  test_img = np.array(tf.keras.utils.load_img(
+      r'C:\Users\ittic\Downloads\ML for IoT\hw1-RishitaChawla\airplane.jpg', 
+      grayscale=False,
+      color_mode='rgb',
+      target_size=(32,32)))
 
+  test_img = test_img / 255.0
+  test_img = np.expand_dims(test_img, axis=0)
+  predictions = model3.predict(test_img)
+  class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 
+                  'dog', 'frog', 'horse', 'ship', 'truck']
+  predicted_index = np.argmax(predictions[0])
+  print(f"The model thinks this is a: {class_names[predicted_index]}")
 
   
+
   ### Repeat for model 3 and your best sub-50k params model
   
   
