@@ -93,8 +93,42 @@ def build_model3():
     return model
 
 def build_model50k():
-  model = None # Add code to define model 1.
-  return model
+    model = tf.keras.Sequential([
+        # LAYER 1: Standard Conv
+        tf.keras.layers.Conv2D(32, (3, 3), padding='same', input_shape=(32, 32, 3)),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Activation('relu'),
+        
+        # LAYER 2: Separable Downsample (Stride 2)
+        tf.keras.layers.SeparableConv2D(32, (3, 3), strides=(2, 2), padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Activation('relu'),
+        tf.keras.layers.Dropout(0.2), # Early dropout to handle noise
+
+        # LAYER 3: Deepening the features
+        tf.keras.layers.SeparableConv2D(64, (3, 3), padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Activation('relu'),
+        
+        # LAYER 4: Final Downsample (Stride 2)
+        tf.keras.layers.SeparableConv2D(64, (3, 3), strides=(2, 2), padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Activation('relu'),
+        tf.keras.layers.Dropout(0.3), # Stronger dropout as features get abstract
+
+        # LAYER 5: Final Feature Processing
+        tf.keras.layers.SeparableConv2D(64, (3, 3), padding='same'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Activation('relu'),
+
+        # Global Average Pooling replaces Flatten to keep params low
+        tf.keras.layers.GlobalAveragePooling2D(),
+        
+        # Final Classification
+        tf.keras.layers.Dropout(0.4),
+        tf.keras.layers.Dense(10) # No activation here because from_logits=True
+    ])
+    return model
 
 # no training or dataset construction should happen above this line
 # also, be careful not to unindent below here, or the code be executed on import
@@ -145,55 +179,27 @@ if __name__ == '__main__':
   
   #-----------------------------------------MODEL 2 ----------------------------------------------
   # Build, compile, and train model 2 (DS Convolutions)
-  model3 = build_model3()
-  # Compiling the model
-  model3.compile(optimizer='adam',
-                loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                metrics=['accuracy']) 
-  model3.summary()
 
-  checkpoint_cb = tf.keras.callbacks.ModelCheckpoint(
-      "model3_best.h5", 
-      save_best_only=True, 
-      monitor="val_accuracy"
-  )
 
-  history = model3.fit(
-      train_images,
-      train_labels,
-      epochs=30,
-      validation_data=(val_images, val_labels),
-      callbacks=[checkpoint_cb] 
-  )
-  train_acc = history.history['accuracy'][-1]       # last epoch training accuracy
-  val_acc   = history.history['val_accuracy'][-1]   # last epoch validation accuracy
+# Build and Compile
+model_best = build_model50k()
+model_best.compile(optimizer='adam',
+                    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                    metrics=['accuracy'])
+    
+# Check the param count - MUST BE UNDER 50,000
+model_best.summary() 
 
-  test_loss, test_acc = model3.evaluate(test_images, test_labels)
+# Train (Maybe use 50 epochs since small models learn slower)
+model_best.fit(train_images, train_labels, 
+                epochs=50, 
+                validation_data=(val_images, val_labels))
 
-  test_loss, test_accuracy = model3.evaluate(
-      test_images,
-      test_labels
-    )
-
-  print("Test accuracy:", test_accuracy)
- 
-  
-  test_img = np.array(tf.keras.utils.load_img(
-      r'C:\Users\ittic\Downloads\ML for IoT\hw1-RishitaChawla\airplane.jpg', 
-      grayscale=False,
-      color_mode='rgb',
-      target_size=(32,32)))
-
-  test_img = test_img / 255.0
-  test_img = np.expand_dims(test_img, axis=0)
-  predictions = model3.predict(test_img)
-  class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 
-                  'dog', 'frog', 'horse', 'ship', 'truck']
-  predicted_index = np.argmax(predictions[0])
-  print(f"The model thinks this is a: {class_names[predicted_index]}")
-
-  
+# SAVE THE MODEL AS REQUESTED
+model_best.save("best_model.h5")
+print("Success! best_model.h5 has been saved.")
 
   ### Repeat for model 3 and your best sub-50k params model
+
   
   

@@ -10,7 +10,6 @@ import sys
 import hw1_complete as hw
 
 
-
 model1 = hw.build_model1()
 model2 = hw.build_model2()
 model3 = hw.build_model3()
