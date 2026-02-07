@@ -182,24 +182,24 @@ if __name__ == '__main__':
 
 
 # Build and Compile
-model_best = build_model50k()
-model_best.compile(optimizer='adam',
-                    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                    metrics=['accuracy'])
-    
-# Check the param count - MUST BE UNDER 50,000
-model_best.summary() 
+  model_best = build_model50k()
+  model_best.compile(optimizer='adam',
+                      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                      metrics=['accuracy'])
+      
+  # Check the param count - MUST BE UNDER 50,000
+  model_best.summary() 
 
-# Train (Maybe use 50 epochs since small models learn slower)
-model_best.fit(train_images, train_labels, 
-                epochs=50, 
-                validation_data=(val_images, val_labels))
+  # Train (Maybe use 50 epochs since small models learn slower)
+  model_best.fit(train_images, train_labels, 
+                  epochs=50, 
+                  validation_data=(val_images, val_labels))
 
-# SAVE THE MODEL AS REQUESTED
-model_best.save("best_model.h5")
-print("Success! best_model.h5 has been saved.")
+  # SAVE THE MODEL AS REQUESTED
+  model_best.save("best_model.h5")
+  print("Success! best_model.h5 has been saved.")
 
-  ### Repeat for model 3 and your best sub-50k params model
+    ### Repeat for model 3 and your best sub-50k params model
 
   
   
