@@ -21,114 +21,147 @@ print(f"Keras Version: {keras.__version__}")
 def build_model1():
     model = tf.keras.Sequential([
         tf.keras.layers.Flatten(input_shape=(32,32,3)),
-        tf.keras.layers.Dense(128), # Dense Layer 1
-        tf.keras.layers.LeakyReLU(0.1),
-        tf.keras.layers.Dense(128),  # Dense Layer 2
-        tf.keras.layers.LeakyReLU(0.1),
-        tf.keras.layers.Dense(128),  # Dense Layer 3
-        tf.keras.layers.LeakyReLU(0.1),
+        tf.keras.layers.Dense(128, activation=tf.nn.leaky_relu),
+        tf.keras.layers.Dense(128, activation=tf.nn.leaky_relu),
+        tf.keras.layers.Dense(128, activation=tf.nn.leaky_relu),
         tf.keras.layers.Dense(10)
     ])
+    model.compile(
+        optimizer='adam',
+        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=['accuracy']
+    )
     return model
 
 def build_model2():
+    model = keras.Sequential([
+        layers.Conv2D(32, 3, strides=2, padding='same', activation='relu', input_shape=(32,32,3)),
+        layers.BatchNormalization(),
 
-  model = tf.keras.Sequential([
-        # Layer 1: 32 filters, stride 2
-        tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), padding="same", activation="relu", input_shape=(32, 32, 3)),
-        tf.keras.layers.BatchNormalization(),
+        layers.Conv2D(64, 3, strides=2, padding='same', activation='relu'),
+        layers.BatchNormalization(),
 
-        # Layer 2: 64 filters, stride 2
-        tf.keras.layers.Conv2D(64, (3, 3), strides=(2, 2), padding="same", activation="relu"),
-        tf.keras.layers.BatchNormalization(),
+        layers.Conv2D(128, 3, padding='same', activation='relu'),
+        layers.BatchNormalization(),
 
-        # Four more pairs of 128-filter layers (Stride defaults to 1)
-        tf.keras.layers.Conv2D(128, (3, 3), padding="same", activation="relu"),
-        tf.keras.layers.BatchNormalization(),
-        
-        tf.keras.layers.Conv2D(128, (3, 3), padding="same", activation="relu"),
-        tf.keras.layers.BatchNormalization(),
-        
-        tf.keras.layers.Conv2D(128, (3, 3), padding="same", activation="relu"),
-        tf.keras.layers.BatchNormalization(),
-        
-        tf.keras.layers.Conv2D(128, (3, 3), padding="same", activation="relu"),
-        tf.keras.layers.BatchNormalization(),
+        layers.Conv2D(128, 3, padding='same', activation='relu'),
+        layers.BatchNormalization(),
 
-        # Output Section
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(10)
+        layers.Conv2D(128, 3, padding='same', activation='relu'),
+        layers.BatchNormalization(),
+
+        layers.Conv2D(128, 3, padding='same', activation='relu'),
+        layers.BatchNormalization(),
+
+        layers.Flatten(),
+        layers.Dense(10)
     ])
-  
-  return model
+
+    model.compile(
+        optimizer='adam',
+        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=['accuracy']
+    )
+    return model
 
 def build_model3():
-    
-    inputs = tf.keras.Input(shape=(32, 32, 3))
+  model = tf.keras.Sequential([
+    tf.keras.layers.SeparableConv2D(32, 3, strides=2, padding='same', activation='relu', input_shape=(32,32,3)),
+    tf.keras.layers.BatchNormalization(),
 
-    # LAYER 1: Standard Conv2D 
-    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), padding="same", activation="relu")(inputs)
-    x = tf.keras.layers.BatchNormalization()(x)
+    tf.keras.layers.SeparableConv2D(64, 3, strides=2, padding='same', activation='relu'),
+    tf.keras.layers.BatchNormalization(),
 
-    # LAYER 2: SeparableConv2D 
-    x = tf.keras.layers.SeparableConv2D(64, (3, 3), strides=(2, 2), padding="same", activation="relu")(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    shortcut = x 
+    tf.keras.layers.SeparableConv2D(128, 3, padding='same', activation='relu'),
+    tf.keras.layers.BatchNormalization(),
 
-    # Two Separable Layers (Stride 1)
-    x = tf.keras.layers.SeparableConv2D(64, (3, 3), padding="same", activation="relu")(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.SeparableConv2D(64, (3, 3), padding="same", activation="relu")(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    tf.keras.layers.SeparableConv2D(128, 3, padding='same', activation='relu'),
+    tf.keras.layers.BatchNormalization(),
 
-    x = tf.keras.layers.Add()([x, shortcut]) 
-    x = tf.keras.layers.SeparableConv2D(128, (3, 3), padding="same", activation="relu")(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.SeparableConv2D(128, (3, 3), padding="same", activation="relu")(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Flatten()(x)
-    outputs = tf.keras.layers.Dense(10)(x)
+    tf.keras.layers.SeparableConv2D(128, 3, padding='same', activation='relu'),
+    tf.keras.layers.BatchNormalization(),
 
-    model = tf.keras.Model(inputs=inputs, outputs=outputs, name="model3_residual")
-    return model
+    tf.keras.layers.SeparableConv2D(128, 3, padding='same', activation='relu'),
+    tf.keras.layers.BatchNormalization(),
+
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(10)
+  ])
+  model.compile(
+      optimizer='adam',
+      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      metrics=['accuracy']
+    )
+  return model
 
 def build_model50k():
-    model = tf.keras.Sequential([
-        # LAYER 1: Standard Conv
-        tf.keras.layers.Conv2D(32, (3, 3), padding='same', input_shape=(32, 32, 3)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Activation('relu'),
-        
-        # LAYER 2: Separable Downsample (Stride 2)
-        tf.keras.layers.SeparableConv2D(32, (3, 3), strides=(2, 2), padding='same'),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Activation('relu'),
-        tf.keras.layers.Dropout(0.2), # Early dropout to handle noise
+  model = keras.Sequential([
 
-        # LAYER 3: Deepening the features
-        tf.keras.layers.SeparableConv2D(64, (3, 3), padding='same'),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Activation('relu'),
-        
-        # LAYER 4: Final Downsample (Stride 2)
-        tf.keras.layers.SeparableConv2D(64, (3, 3), strides=(2, 2), padding='same'),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Activation('relu'),
-        tf.keras.layers.Dropout(0.3), # Stronger dropout as features get abstract
+    # 32x32x3 → 16x16x32
+    layers.SeparableConv2D(32, 3, padding='same', activation='relu', input_shape=(32,32,3)),
+    layers.BatchNormalization(),
+    layers.MaxPooling2D(),
 
-        # LAYER 5: Final Feature Processing
-        tf.keras.layers.SeparableConv2D(64, (3, 3), padding='same'),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Activation('relu'),
+    # 16x16x32 → 8x8x64
+    layers.SeparableConv2D(64, 3, padding='same', activation='relu'),
+    layers.BatchNormalization(),
+    layers.MaxPooling2D(),
 
-        # Global Average Pooling replaces Flatten to keep params low
-        tf.keras.layers.GlobalAveragePooling2D(),
-        
-        # Final Classification
-        tf.keras.layers.Dropout(0.4),
-        tf.keras.layers.Dense(10) # No activation here because from_logits=True
-    ])
-    return model
+    # 8x8x64 → 8x8x128
+    layers.SeparableConv2D(128, 3, padding='same', activation='relu'),
+    layers.BatchNormalization(),
+
+    # Reduce spatial size cheaply
+    layers.GlobalAveragePooling2D(),
+
+    layers.Dense(64, activation='relu'),
+    layers.Dropout(0.3),
+
+    layers.Dense(10)
+  ])
+
+  model.compile(
+      optimizer=keras.optimizers.Adam(learning_rate=0.001),
+      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      metrics=['accuracy']
+    )
+  return model
 
 # no training or dataset construction should happen above this line
 # also, be careful not to unindent below here, or the code be executed on import
+
+
+if __name__ == '__main__':
+
+    (train_images, train_labels), (test_images, test_labels) = keras.datasets.cifar10.load_data()
+
+    train_images = train_images / 255.0
+    test_images = test_images / 255.0
+
+    val_images = train_images[-5000:]
+    val_labels = train_labels[-5000:]
+    train_images = train_images[:-5000]
+    train_labels = train_labels[:-5000]
+
+    model1 = build_model1()
+    model1.fit(train_images, train_labels, epochs=30,
+               validation_data=(val_images, val_labels))
+
+    model2 = build_model2()
+    model2.fit(train_images, train_labels, epochs=30,
+               validation_data=(val_images, val_labels))
+
+    model3 = build_model3()
+    model3.fit(train_images, train_labels, epochs=30,
+               validation_data=(val_images, val_labels))
+
+    best_model = build_model50k()
+    best_model.fit(train_images, train_labels, epochs=30,
+                   validation_data=(val_images, val_labels))
+
+    best_model.save("best_model.h5")
+
+
+
+  
+  
